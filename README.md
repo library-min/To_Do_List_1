@@ -94,34 +94,6 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18.0+-green.svg?style=flat-square&logo=node.js)](https://nodejs.org/)
 [![npm](https://img.shields.io/badge/npm-latest-red.svg?style=flat-square&logo=npm)](https://npmjs.com/)
 
-### ⚡ 원클릭 설치
-
-```bash
-# 🔥 빠른 설치 스크립트
-curl -o- https://raw.githubusercontent.com/yourusername/smart-todo/main/install.sh | bash
-```
-
-### 🛠️ 수동 설치
-
-<details>
-<summary><strong>단계별 설치 가이드</strong></summary>
-
-```bash
-# 1️⃣ 저장소 클론
-git clone https://github.com/yourusername/smart-todo.git
-cd smart-todo
-
-# 2️⃣ 의존성 설치 
-npm install
-
-# 3️⃣ 개발 서버 시작
-npm run dev
-
-# 🎉 브라우저에서 http://localhost:5173 방문
-```
-
-</details>
-
 ### 🏗️ 빌드 및 배포
 
 <table>
