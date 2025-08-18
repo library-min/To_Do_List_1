@@ -393,6 +393,45 @@ function TodoList() {
     }
   };
 
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case '높음': return 'var(--color-error)';
+      case '보통': return 'var(--color-warning)';
+      case '낮음': return 'var(--color-success)';
+      default: return 'var(--color-gray-500)';
+    }
+  };
+
+  const getEisenhowerInfo = (quadrant) => {
+    switch (quadrant) {
+      case 'important-urgent':
+        return { text: '중요하고 긴급', color: '#ef4444', icon: '🔥' };
+      case 'important-not-urgent':
+        return { text: '중요하지만 여유', color: '#f59e0b', icon: '📋' };
+      case 'not-important-urgent':
+        return { text: '긴급하지만 덜 중요', color: '#06b6d4', icon: '⚡' };
+      case 'not-important-not-urgent':
+        return { text: '여유롭고 덜 중요', color: '#84cc16', icon: '📝' };
+      default:
+        return { text: '', color: '', icon: '' };
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR');
+  };
+
+  const getAvailableTodos = () => {
+    return todos.filter(todo => !todo.completed);
+  };
+
+  const sortTodosByQuadrant = (todos) => {
+    const quadrantOrder = ['important-urgent', 'important-not-urgent', 'not-important-urgent', 'not-important-not-urgent'];
+    return todos.sort((a, b) => quadrantOrder.indexOf(a.eisenhowerQuadrant) - quadrantOrder.indexOf(b.eisenhowerQuadrant));
+  };
+
   const getVisibleTodos = () => {
     let filteredTodos = showCompleted ? todos : todos.filter(todo => !todo.completed);
     
@@ -588,65 +627,64 @@ function TodoList() {
             </div>
 
             <div className="todo-list">
-              {getVisibleTodos().length === 0 ? (
-                <p className="empty-message">
-                  {searchQuery.trim() 
-                    ? `"${searchQuery}"에 대한 검색 결과가 없습니다.`
-                    : todos.length === 0 
-                      ? '할 일이 없습니다. 새로운 할 일을 추가해보세요!' 
-                      : showCompleted 
-                        ? '할 일이 없습니다.' 
-                        : '완료되지 않은 할 일이 없습니다!'}
-                </p>
-              ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext items={getVisibleTodos().map(todo => todo.id)} strategy={verticalListSortingStrategy}>
-                    {getVisibleTodos().map(todo => (
-                      <SortableItem
-                        key={todo.id}
-                        todo={todo}
-                        onToggle={toggleTodo}
-                        onDelete={deleteTodo}
-                        onArchive={archiveTodo}
-                        onDuplicate={duplicateTodo}
-                        onStartPomodoro={startPomodoro}
-                        onStartEditing={startEditing}
-                        editingId={editingId}
-                        editingText={editingText}
-                        setEditingText={setEditingText}
-                        saveEdit={saveEdit}
-                        handleEditKeyPress={handleEditKeyPress}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              )}
-            </div>
-
-            {todos.length > 0 && (
-              <div className="todo-counter">
-                <div className="counter-item">
-                  <span className="counter-number">{todos.filter(todo => !todo.completed).length}</span>
-                  <span className="counter-label">남은 할 일</span>
-                </div>
-                <div className="counter-item">
-                  <span className="counter-number">{todos.filter(todo => todo.completed).length}</span>
-                  <span className="counter-label">완료</span>
-                </div>
-                <div className="counter-item">
-                  <span className="counter-number">{todos.length}</span>
-                  <span className="counter-label">전체</span>
-                </div>
-              </div>
-            )}
-          </div>
+          {getVisibleTodos().length === 0 ? (
+            <p className="empty-message">
+              {searchQuery.trim() 
+                ? `"${searchQuery}"에 대한 검색 결과가 없습니다.`
+                : todos.length === 0 
+                  ? '할 일이 없습니다. 새로운 할 일을 추가해보세요!' 
+                  : showCompleted 
+                    ? '할 일이 없습니다.' 
+                    : '완료되지 않은 할 일이 없습니다!'}
+            </p>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={getVisibleTodos().map(todo => todo.id)} strategy={verticalListSortingStrategy}>
+                {getVisibleTodos().map(todo => (
+                  <SortableItem
+                    key={todo.id}
+                    todo={todo}
+                    onToggle={toggleTodo}
+                    onDelete={deleteTodo}
+                    onArchive={archiveTodo}
+                    onDuplicate={duplicateTodo}
+                    onStartPomodoro={startPomodoro}
+                    onStartEditing={startEditing}
+                    editingId={editingId}
+                    editingText={editingText}
+                    setEditingText={setEditingText}
+                    saveEdit={saveEdit}
+                    handleEditKeyPress={handleEditKeyPress}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          )}
         </div>
 
-        {archivedTodos.length > 0 && (
+        {todos.length > 0 && (
+          <div className="todo-counter">
+            <div className="counter-item">
+              <span className="counter-number">{todos.filter(todo => !todo.completed).length}</span>
+              <span className="counter-label">남은 할 일</span>
+            </div>
+            <div className="counter-item">
+              <span className="counter-number">{todos.filter(todo => todo.completed).length}</span>
+              <span className="counter-label">완료</span>
+            </div>
+            <div className="counter-item">
+              <span className="counter-number">{todos.length}</span>
+              <span className="counter-label">전체</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {archivedTodos.length > 0 && (
           <div className="archive-section">
             <button 
               onClick={() => setShowArchive(!showArchive)}
@@ -687,7 +725,6 @@ function TodoList() {
             )}
           </div>
         )}
-      </div>
 
       {showPomodoro && currentTask && (
         <PomodoroTimer
@@ -696,6 +733,7 @@ function TodoList() {
           onClose={() => setShowPomodoro(false)}
         />
       )}
+      </div>
     </div>
   );
 }
