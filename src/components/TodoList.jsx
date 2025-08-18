@@ -1,18 +1,295 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import ThemeToggle from './ThemeToggle';
+import GameStats from './GameStats';
+import PomodoroTimer from './PomodoroTimer';
+import Statistics from './Statistics';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import {CSS} from '@dnd-kit/utilities';
 import './TodoList.css';
+
+function SortableItem({ todo, onToggle, onDelete, onArchive, onDuplicate, onStartPomodoro, onStartEditing, editingId, editingText, setEditingText, saveEdit, handleEditKeyPress }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: todo.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case '높음': return 'var(--color-error)';
+      case '보통': return 'var(--color-warning)';
+      case '낮음': return 'var(--color-success)';
+      default: return 'var(--color-gray-500)';
+    }
+  };
+
+  const getPriorityIcon = (priority) => {
+    switch (priority) {
+      case '높음': return '🔴';
+      case '보통': return '🟡';
+      case '낮음': return '🟢';
+      default: return '⚪';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR');
+  };
+
+  const getDueDateStatus = (dateString) => {
+    if (!dateString) return null;
+    const dueDate = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return 'overdue';
+    if (diffDays === 0) return 'today';
+    if (diffDays === 1) return 'tomorrow';
+    if (diffDays <= 3) return 'soon';
+    return 'normal';
+  };
+
+  const dueDateStatus = getDueDateStatus(todo.dueDate);
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`todo-item-card bounce-enter ${todo.completed ? 'completed' : ''} ${dueDateStatus ? `due-${dueDateStatus}` : ''}`}
+    >
+      <div className="todo-header">
+        <div className="todo-main">
+          <div className="drag-handle" {...attributes} {...listeners}>
+            ⋮⋮
+          </div>
+          <input
+            type="checkbox"
+            checked={todo.completed}
+            onChange={() => onToggle(todo.id)}
+            className="todo-checkbox"
+          />
+          {editingId === todo.id ? (
+            <input
+              type="text"
+              value={editingText}
+              onChange={(e) => setEditingText(e.target.value)}
+              onKeyDown={handleEditKeyPress}
+              onBlur={saveEdit}
+              className="todo-edit-input"
+              autoFocus
+            />
+          ) : (
+            <span 
+              className="todo-text"
+              onDoubleClick={() => !todo.completed && onStartEditing(todo.id, todo.text)}
+            >
+              {todo.emoji && <span className="todo-emoji">{todo.emoji}</span>}
+              {todo.text}
+            </span>
+          )}
+        </div>
+        <div className="todo-actions">
+          {!todo.completed && (
+            <button 
+              onClick={() => onStartPomodoro(todo)}
+              className="pomodoro-button"
+              title="뽀모도로 시작"
+            >
+              🍅
+            </button>
+          )}
+          <button 
+            onClick={() => onDuplicate(todo.id)}
+            className="duplicate-button"
+            title="할 일 복제"
+          >
+            📋
+          </button>
+          {todo.completed && (
+            <button 
+              onClick={() => onArchive(todo.id)}
+              className="archive-button"
+              title="아카이브로 이동"
+            >
+              📦
+            </button>
+          )}
+          <button 
+            onClick={() => onDelete(todo.id)}
+            className="delete-button"
+          >
+            삭제
+          </button>
+        </div>
+      </div>
+      
+      <div className="todo-details">
+        <div className="todo-meta">
+          <span 
+            className="priority-badge"
+            style={{ backgroundColor: getPriorityColor(todo.priority) }}
+          >
+            {getPriorityIcon(todo.priority)} {todo.priority}
+          </span>
+          {todo.dueDate && (
+            <span className={`due-date ${dueDateStatus ? `due-${dueDateStatus}` : ''}`}>
+              📅 {formatDate(todo.dueDate)}
+              {dueDateStatus === 'overdue' && ' (지났음)'}
+              {dueDateStatus === 'today' && ' (오늘)'}
+              {dueDateStatus === 'tomorrow' && ' (내일)'}
+              {dueDateStatus === 'soon' && ' (곧)'}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function TodoList() {
   const [todos, setTodos] = useState([]);
   const [inputValue, setInputValue] = useState('');
+  const [priority, setPriority] = useState('보통');
+  const [dueDate, setDueDate] = useState('');
+  const [timeEstimate, setTimeEstimate] = useState('');
+  const [dependsOn, setDependsOn] = useState('');
+  const [eisenhowerQuadrant, setEisenhowerQuadrant] = useState('important-urgent');
+  const [selectedEmoji, setSelectedEmoji] = useState('');
+  
+  // Gamification
+  const [points, setPoints] = useState(() => parseInt(localStorage.getItem('todoPoints')) || 0);
+  const [level, setLevel] = useState(() => Math.floor(points / 100) + 1);
+  const [badges, setBadges] = useState(() => JSON.parse(localStorage.getItem('todoBadges')) || []);
+  
+  // Pomodoro
+  const [showPomodoro, setShowPomodoro] = useState(false);
+  const [currentTask, setCurrentTask] = useState(null);
+  
+  // Editing
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState('');
+  
+  // Visibility
+  const [showCompleted, setShowCompleted] = useState(true);
+  
+  // Archive
+  const [archivedTodos, setArchivedTodos] = useState(() => JSON.parse(localStorage.getItem('archivedTodos')) || []);
+  const [showArchive, setShowArchive] = useState(false);
+  
+  // Statistics
+  const [showStatistics, setShowStatistics] = useState(false);
+  
+  // Search
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Drag and Drop
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  useEffect(() => {
+    localStorage.setItem('todoPoints', points.toString());
+    const newLevel = Math.floor(points / 100) + 1;
+    setLevel(newLevel);
+    checkBadges();
+  }, [points]);
+
+  useEffect(() => {
+    localStorage.setItem('todoBadges', JSON.stringify(badges));
+  }, [badges]);
+
+  useEffect(() => {
+    localStorage.setItem('archivedTodos', JSON.stringify(archivedTodos));
+  }, [archivedTodos]);
+
+  const checkBadges = () => {
+    const completedTodos = todos.filter(todo => todo.completed);
+    const newBadges = [];
+
+    // 첫 할 일 완료 뱃지
+    if (completedTodos.length >= 1 && !badges.find(b => b.id === 'first-task')) {
+      newBadges.push({ id: 'first-task', icon: '🎯', name: '첫 걸음', description: '첫 번째 할 일 완료' });
+    }
+
+    // 10개 완료 뱃지
+    if (completedTodos.length >= 10 && !badges.find(b => b.id === 'ten-tasks')) {
+      newBadges.push({ id: 'ten-tasks', icon: '🏆', name: '성실함', description: '10개 할 일 완료' });
+    }
+
+    // 연속 3일 뱃지 (간단 구현)
+    if (points >= 150 && !badges.find(b => b.id === 'streak-3')) {
+      newBadges.push({ id: 'streak-3', icon: '🔥', name: '연속 완주', description: '3일 연속 활동' });
+    }
+
+    if (newBadges.length > 0) {
+      setBadges(prev => [...prev, ...newBadges]);
+    }
+  };
 
   const addTodo = () => {
     if (inputValue.trim() !== '') {
-      setTodos([...todos, {
+      const newTodo = {
         id: Date.now(),
         text: inputValue,
-        completed: false
-      }]);
+        priority: priority,
+        dueDate: dueDate,
+        timeEstimate: timeEstimate,
+        dependsOn: dependsOn,
+        eisenhowerQuadrant: eisenhowerQuadrant,
+        emoji: selectedEmoji,
+        completed: false,
+        createdAt: new Date().toISOString()
+      };
+
+      // 종속성 체크
+      if (dependsOn) {
+        const dependentTask = todos.find(t => t.id === parseInt(dependsOn));
+        if (dependentTask && !dependentTask.completed) {
+          newTodo.blocked = true;
+        }
+      }
+
+      setTodos([...todos, newTodo]);
       setInputValue('');
+      setPriority('보통');
+      setDueDate('');
+      setTimeEstimate('');
+      setDependsOn('');
+      setEisenhowerQuadrant('important-urgent');
+      setSelectedEmoji('');
     }
   };
 
@@ -21,9 +298,93 @@ function TodoList() {
   };
 
   const toggleTodo = (id) => {
-    setTodos(todos.map(todo =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
+    const todo = todos.find(t => t.id === id);
+    if (!todo.completed) {
+      // 할 일 완료시 포인트 지급
+      let earnedPoints = 10;
+      
+      // 우선순위별 보너스
+      if (todo.priority === '높음') earnedPoints += 10;
+      else if (todo.priority === '보통') earnedPoints += 5;
+      
+      // 아이젠하워 매트릭스별 보너스
+      if (todo.eisenhowerQuadrant === 'important-urgent') earnedPoints += 15;
+      else if (todo.eisenhowerQuadrant === 'important-not-urgent') earnedPoints += 10;
+      
+      setPoints(prev => prev + earnedPoints);
+    }
+
+    setTodos(todos.map(todo => {
+      if (todo.id === id) {
+        const updatedTodo = { ...todo, completed: !todo.completed };
+        
+        // 완료시 종속된 다른 할 일들의 blocked 상태 해제
+        if (updatedTodo.completed) {
+          setTodos(prevTodos => 
+            prevTodos.map(t => 
+              t.dependsOn === id.toString() ? { ...t, blocked: false } : t
+            )
+          );
+        }
+        
+        return updatedTodo;
+      }
+      return todo;
+    }));
+  };
+
+  const startPomodoro = (todo) => {
+    setCurrentTask(todo);
+    setShowPomodoro(true);
+  };
+
+  const completePomodoroSession = () => {
+    setPoints(prev => prev + 25); // 뽀모도로 완료 보너스
+    setShowPomodoro(false);
+    setCurrentTask(null);
+  };
+
+  const startEditing = (id, text) => {
+    setEditingId(id);
+    setEditingText(text);
+  };
+
+  const saveEdit = () => {
+    if (editingText.trim() !== '') {
+      setTodos(todos.map(todo => 
+        todo.id === editingId 
+          ? { ...todo, text: editingText.trim() }
+          : todo
+      ));
+    }
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  const handleEditKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      saveEdit();
+    } else if (e.key === 'Escape') {
+      cancelEdit();
+    }
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      setTodos((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+        
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -32,57 +393,327 @@ function TodoList() {
     }
   };
 
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case '높음': return 'var(--color-error)';
+      case '보통': return 'var(--color-warning)';
+      case '낮음': return 'var(--color-success)';
+      default: return 'var(--color-gray-500)';
+    }
+  };
+
+  const getEisenhowerInfo = (quadrant) => {
+    switch (quadrant) {
+      case 'important-urgent':
+        return { text: '중요하고 긴급', color: '#ef4444', icon: '🔥' };
+      case 'important-not-urgent':
+        return { text: '중요하지만 여유', color: '#f59e0b', icon: '📋' };
+      case 'not-important-urgent':
+        return { text: '긴급하지만 덜 중요', color: '#06b6d4', icon: '⚡' };
+      case 'not-important-not-urgent':
+        return { text: '여유롭고 덜 중요', color: '#84cc16', icon: '📝' };
+      default:
+        return { text: '', color: '', icon: '' };
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR');
+  };
+
+  const getAvailableTodos = () => {
+    return todos.filter(todo => !todo.completed);
+  };
+
+  const sortTodosByQuadrant = (todos) => {
+    const quadrantOrder = ['important-urgent', 'important-not-urgent', 'not-important-urgent', 'not-important-not-urgent'];
+    return todos.sort((a, b) => quadrantOrder.indexOf(a.eisenhowerQuadrant) - quadrantOrder.indexOf(b.eisenhowerQuadrant));
+  };
+
+  const getVisibleTodos = () => {
+    let filteredTodos = showCompleted ? todos : todos.filter(todo => !todo.completed);
+    
+    if (searchQuery.trim()) {
+      filteredTodos = filteredTodos.filter(todo => 
+        todo.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        todo.priority.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (todo.emoji && todo.emoji.includes(searchQuery))
+      );
+    }
+    
+    return filteredTodos;
+  };
+
+  const archiveTodo = (id) => {
+    const todoToArchive = todos.find(todo => todo.id === id);
+    if (todoToArchive) {
+      setArchivedTodos(prev => [...prev, { ...todoToArchive, archivedAt: new Date().toISOString() }]);
+      setTodos(todos.filter(todo => todo.id !== id));
+    }
+  };
+
+  const restoreFromArchive = (id) => {
+    const todoToRestore = archivedTodos.find(todo => todo.id === id);
+    if (todoToRestore) {
+      const { archivedAt, ...todoWithoutArchiveDate } = todoToRestore;
+      setTodos(prev => [...prev, todoWithoutArchiveDate]);
+      setArchivedTodos(archivedTodos.filter(todo => todo.id !== id));
+    }
+  };
+
+  const deleteFromArchive = (id) => {
+    setArchivedTodos(archivedTodos.filter(todo => todo.id !== id));
+  };
+
+  const duplicateTodo = (id) => {
+    const todoToDuplicate = todos.find(todo => todo.id === id);
+    if (todoToDuplicate) {
+      const duplicatedTodo = {
+        ...todoToDuplicate,
+        id: Date.now(),
+        text: `${todoToDuplicate.text} (복사본)`,
+        completed: false,
+        createdAt: new Date().toISOString()
+      };
+      setTodos([...todos, duplicatedTodo]);
+    }
+  };
+
   return (
     <div className="container">
       <div className="todo-app card">
-        <h1 className="todo-title">할 일 목록</h1>
+        <div className="app-header">
+          <h1 className="todo-title">할 일 목록</h1>
+          <div className="header-controls">
+            <button 
+              onClick={() => setShowStatistics(!showStatistics)}
+              className={`stats-toggle ${showStatistics ? 'active' : ''}`}
+            >
+              📊 통계
+            </button>
+            <ThemeToggle />
+          </div>
+        </div>
         
-        <div className="todo-input-container">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="새로운 할 일을 입력하세요..."
-            className="todo-input"
-          />
+        <GameStats 
+          points={points} 
+          level={level} 
+          badges={badges}
+        />
+
+        {showStatistics && (
+          <Statistics todos={todos} archivedTodos={archivedTodos} />
+        )}
+        
+        <div className="todo-form">
+          <div className="form-group">
+            <label className="form-label">할 일</label>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="새로운 할 일을 입력하세요..."
+              className="todo-input"
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">중요도</label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="priority-select"
+              >
+                <option value="낮음">낮음</option>
+                <option value="보통">보통</option>
+                <option value="높음">높음</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">마감일</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="date-input"
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">이모지 (선택사항)</label>
+            <div className="emoji-selector">
+              <input
+                type="text"
+                value={selectedEmoji}
+                onChange={(e) => setSelectedEmoji(e.target.value)}
+                placeholder="이모지 입력 또는 선택..."
+                className="emoji-input"
+                maxLength="2"
+              />
+              <div className="emoji-presets">
+                {['📝', '💼', '🏠', '🎯', '💡', '📚', '💪', '🎵', '🍕', '🎮', '✈️', '💻', '📞', '🛒', '🏃‍♂️', '🎨', '📱', '💳'].map(emoji => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setSelectedEmoji(emoji)}
+                    className={`emoji-preset ${selectedEmoji === emoji ? 'selected' : ''}`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <button onClick={addTodo} className="add-button">
-            추가
+            할 일 추가
           </button>
         </div>
 
+        <div className="search-and-controls">
+          <div className="search-container">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="할 일 검색... (제목, 우선순위, 이모지)"
+              className="search-input"
+            />
+            <span className="search-icon">🔍</span>
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="clear-search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {todos.some(todo => todo.completed) && (
+            <div className="visibility-controls">
+              <button 
+                onClick={() => setShowCompleted(!showCompleted)}
+                className={`visibility-toggle ${showCompleted ? 'active' : ''}`}
+              >
+                {showCompleted ? '✅ 완료된 할 일 숨기기' : '👁️ 완료된 할 일 보기'}
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="todo-list">
-          {todos.length === 0 ? (
-            <p className="empty-message">할 일이 없습니다. 새로운 할 일을 추가해보세요!</p>
+          {getVisibleTodos().length === 0 ? (
+            <p className="empty-message">
+              {searchQuery.trim() 
+                ? `"${searchQuery}"에 대한 검색 결과가 없습니다.`
+                : todos.length === 0 
+                  ? '할 일이 없습니다. 새로운 할 일을 추가해보세요!' 
+                  : showCompleted 
+                    ? '할 일이 없습니다.' 
+                    : '완료되지 않은 할 일이 없습니다!'}
+            </p>
           ) : (
-            todos.map(todo => (
-              <div key={todo.id} className={`todo-item bounce-enter ${todo.completed ? 'completed' : ''}`}>
-                <div className="todo-content">
-                  <input
-                    type="checkbox"
-                    checked={todo.completed}
-                    onChange={() => toggleTodo(todo.id)}
-                    className="todo-checkbox"
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={getVisibleTodos().map(todo => todo.id)} strategy={verticalListSortingStrategy}>
+                {getVisibleTodos().map(todo => (
+                  <SortableItem
+                    key={todo.id}
+                    todo={todo}
+                    onToggle={toggleTodo}
+                    onDelete={deleteTodo}
+                    onArchive={archiveTodo}
+                    onDuplicate={duplicateTodo}
+                    onStartPomodoro={startPomodoro}
+                    onStartEditing={startEditing}
+                    editingId={editingId}
+                    editingText={editingText}
+                    setEditingText={setEditingText}
+                    saveEdit={saveEdit}
+                    handleEditKeyPress={handleEditKeyPress}
                   />
-                  <span className="todo-text">{todo.text}</span>
-                </div>
-                <button 
-                  onClick={() => deleteTodo(todo.id)}
-                  className="delete-button"
-                >
-                  삭제
-                </button>
-              </div>
-            ))
+                ))}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
 
         {todos.length > 0 && (
-          <div className="todo-stats">
-            <span>총 {todos.length}개 | 완료 {todos.filter(todo => todo.completed).length}개</span>
+          <div className="todo-counter">
+            <div className="counter-item">
+              <span className="counter-number">{todos.filter(todo => !todo.completed).length}</span>
+              <span className="counter-label">남은 할 일</span>
+            </div>
+            <div className="counter-item">
+              <span className="counter-number">{todos.filter(todo => todo.completed).length}</span>
+              <span className="counter-label">완료</span>
+            </div>
+            <div className="counter-item">
+              <span className="counter-number">{todos.length}</span>
+              <span className="counter-label">전체</span>
+            </div>
+          </div>
+        )}
+        {archivedTodos.length > 0 && (
+          <div className="archive-section">
+            <button 
+              onClick={() => setShowArchive(!showArchive)}
+              className={`archive-toggle ${showArchive ? 'active' : ''}`}
+            >
+              📦 아카이브 ({archivedTodos.length})
+            </button>
+            
+            {showArchive && (
+              <div className="archive-list">
+                {archivedTodos.map(todo => (
+                  <div key={todo.id} className="archive-item">
+                    <div className="archive-content">
+                      <span className="archive-text">{todo.text}</span>
+                      <span className="archive-date">
+                        {new Date(todo.archivedAt).toLocaleDateString('ko-KR')}에 보관됨
+                      </span>
+                    </div>
+                    <div className="archive-actions">
+                      <button 
+                        onClick={() => restoreFromArchive(todo.id)}
+                        className="restore-button"
+                        title="복원"
+                      >
+                        ↩️
+                      </button>
+                      <button 
+                        onClick={() => deleteFromArchive(todo.id)}
+                        className="delete-button"
+                        title="영구 삭제"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {showPomodoro && currentTask && (
+        <PomodoroTimer
+          taskName={currentTask.text}
+          onComplete={completePomodoroSession}
+          onClose={() => setShowPomodoro(false)}
+        />
+      )}
     </div>
   );
 }

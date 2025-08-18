@@ -1,5 +1,6 @@
 .App {
   min-height: 100vh;
-  background-color: var(--color-gray-50);
+  background-color: var(--bg-color);
   padding: 20px 0;
+  transition: background-color 0.3s ease;
 }
