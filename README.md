@@ -1,16 +1,5 @@
 # 📋 Smart Todo
 
-<div align="center">
-
-[![React](https://img.shields.io/badge/React-19.1.1-61dafb.svg?style=for-the-badge&logo=react)](https://reactjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-7.1.2-646cff.svg?style=for-the-badge&logo=vite)](https://vitejs.dev/)
-[![Chart.js](https://img.shields.io/badge/Chart.js-4.5.0-ff6384.svg?style=for-the-badge&logo=chart.js)](https://www.chartjs.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?style=for-the-badge)](#)
-
-</div>
-
-<div align="center">
 
 
 [🚀 라이브 데모](https://your-demo-url.vercel.app/) • [📖 문서](https://github.com/yourusername/smart-todo/wiki) • [🐛 이슈 신고](https://github.com/yourusername/smart-todo/issues) • [💬 토론](https://github.com/yourusername/smart-todo/discussions)
@@ -201,62 +190,6 @@ src/
 └── main.jsx            # ReactDOM 렌더링
 ```
 
-## 🎯 핵심 구현 상세
-
-### 1. 할 일 데이터 구조
-```javascript
-const todoSchema = {
-  id: Date.now(),                    // 고유 식별자
-  text: "할 일 내용",                 // 사용자 입력 텍스트
-  priority: "높음|보통|낮음",         // 우선순위 
-  dueDate: "2025-01-20",            // 마감일 (선택사항)
-  emoji: "📝",                      // 이모지 스티커
-  completed: false,                 // 완료 상태
-  createdAt: "2025-01-20T10:30Z",   // 생성 시간
-  eisenhowerQuadrant: "important-urgent" // 아이젠하워 매트릭스
-}
-```
-
-### 2. 게이미피케이션 포인트 시스템
-```javascript
-// 기본 포인트 + 우선순위 보너스 + 매트릭스 보너스
-let earnedPoints = 10; // 기본
-if (priority === '높음') earnedPoints += 10;
-else if (priority === '보통') earnedPoints += 5;
-
-if (eisenhowerQuadrant === 'important-urgent') earnedPoints += 15;
-else if (eisenhowerQuadrant === 'important-not-urgent') earnedPoints += 10;
-
-// 레벨 = Math.floor(totalPoints / 100) + 1
-// 뽀모도로 세션 완료 시 +25 포인트
-```
-
-### 3. 검색 알고리즘
-```javascript
-const searchTodos = (todos, query) => {
-  return todos.filter(todo => 
-    todo.text.toLowerCase().includes(query.toLowerCase()) ||
-    todo.priority.toLowerCase().includes(query.toLowerCase()) ||
-    (todo.emoji && todo.emoji.includes(query))
-  );
-};
-```
-
-### 4. 마감일 상태 분류
-```javascript
-const getDueDateStatus = (dateString) => {
-  const dueDate = new Date(dateString);
-  const today = new Date();
-  const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-  
-  if (diffDays < 0) return 'overdue';      // 빨간색
-  if (diffDays === 0) return 'today';      // 주황색  
-  if (diffDays === 1) return 'tomorrow';   // 파란색
-  if (diffDays <= 3) return 'soon';        // 초록색
-  return 'normal';                         // 기본색
-};
-```
-
 ## 📊 성능 최적화 전략
 
 ### **React 최적화**
@@ -274,13 +207,6 @@ const getDueDateStatus = (dateString) => {
 - Hardware Acceleration - `transform`, `opacity` 사용
 - 최소한의 리플로우 - Layout 변경 최소화
 - 효율적인 호버 효과 - GPU 가속 transform과 box-shadow 활용
-
-## 🔒 보안 & 프라이버시
-
-- **클라이언트 전용**: 모든 데이터는 브라우저 Local Storage에만 저장
-- **외부 전송 없음**: 개인정보 네트워크 전송 차단
-- **XSS 방지**: React의 기본 이스케이핑 활용
-- **입력 검증**: 사용자 입력값 필터링 및 검증
 
 ## 🌟 향후 개발 로드맵
 
@@ -307,73 +233,6 @@ const getDueDateStatus = (dateString) => {
 - [ ] 할 일 공유 및 할당
 - [ ] 실시간 협업 편집
 - [ ] 프로젝트 템플릿
-
-## 🧪 테스트 커버리지
-
-```bash
-# 향후 구현 예정
-npm run test          # Jest 단위 테스트
-npm run test:e2e      # Cypress E2E 테스트  
-npm run test:coverage # 코드 커버리지 리포트
-```
-
-## 🤝 기여 가이드라인
-
-### **개발 환경 설정**
-1. **Fork** 이 저장소
-2. **Clone** 포크된 저장소
-3. **Branch** 생성: `git checkout -b feature/새기능명`
-4. **개발** 및 테스트
-5. **Commit**: `git commit -m 'feat: 새로운 기능 추가'`
-6. **Push**: `git push origin feature/새기능명`
-7. **Pull Request** 생성
-
-### **코딩 스타일**
-- **ESLint** 규칙 준수 (`npm run lint`)
-- **컴포넌트** 단위 개발 (단일 책임)
-- **CSS-in-JS** 대신 CSS 모듈 사용
-- **접근성(a11y)** 표준 준수
-- **반응형** 우선 설계
-
-### **커밋 컨벤션**
-```
-feat: 새로운 기능 추가
-fix: 버그 수정  
-docs: 문서 업데이트
-style: 코드 포맷팅
-refactor: 코드 리팩토링
-test: 테스트 추가/수정
-chore: 빌드/설정 변경
-```
-
-## 📈 프로젝트 통계
-
-<div align="center">
-
-<table>
-<tr>
-<td align="center">
-<h3>🧩 컴포넌트</h3>
-<h2>6개</h2>
-<p>TodoList, PomodoroTimer, Statistics, GameStats, ThemeToggle</p>
-</td>
-<td align="center">
-<h3>💻 코드 라인</h3>
-<h2>1,500+</h2>
-<p>주석 및 테스트 포함</p>
-</td>
-<td align="center">
-<h3>📦 번들 크기</h3>
-<h2>~150KB</h2>
-<p>gzipped 기준</p>
-</td>
-<td align="center">
-<h3>⚡ 초기 로딩</h3>
-<h2>&lt;2초</h2>
-<p>3G 네트워크 기준</p>
-</td>
-</tr>
-</table>
 
 ### 🎯 **성능 지표**
 
