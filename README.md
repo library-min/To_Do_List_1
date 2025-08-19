@@ -5,9 +5,11 @@
 <div align="center">
  
   **메인 화면 (라이트)**
+  
   <img src="public/To-Do List_1Full Page (Light).png" alt="메인 화면" width="95%">
   
   **메인 화면 (다크)**
+  
   <img src="public/To-Do List_1Full Page.png" alt="다크 모드" width="95%">
   
   **뽀모도로 타이머**
