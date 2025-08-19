@@ -3,10 +3,9 @@
 ## 📸 스크린샷
 
 <div align="center">
-  <img src="https://via.placeholder.com/800x500/6366f1/ffffff?text=Smart+Todo+Main+Interface" alt="메인 화면" width="49%">
-  <img src="https://via.placeholder.com/800x500/10b981/ffffff?text=Statistics+Dashboard" alt="통계 대시보드" width="49%">
-  <img src="https://via.placeholder.com/800x500/f59e0b/ffffff?text=Pomodoro+Timer" alt="뽀모도로 타이머" width="49%">
-  <img src="https://via.placeholder.com/800x500/ef4444/ffffff?text=Dark+Mode" alt="다크 모드" width="49%">
+  <img src="public/To-Do List_1Full Page (Light).png" alt="메인 화면" width="49%">
+  <img src="public/To-Do List_1Timer.png" alt="뽀모도로 타이머" width="49%">
+  <img src="public/To-Do List_1Full Page.png" alt="다크 모드" width="49%">
 </div>
 
 ## ✨ 주요 기능
