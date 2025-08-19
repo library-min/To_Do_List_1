@@ -1,7 +1,5 @@
 # 📋 Smart Todo
 
----
-
 ## 📸 스크린샷
 
 <div align="center">
