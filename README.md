@@ -12,8 +12,6 @@
 
 <div align="center">
 
-> 🎯 **생산성을 극대화하는 올인원 할 일 관리 솔루션**  
-> 게이미피케이션, 뽀모도로 타이머, 통계 분석, 드래그 앤 드롭 등 고급 기능을 갖춘 모던 웹 애플리케이션
 
 [🚀 라이브 데모](https://your-demo-url.vercel.app/) • [📖 문서](https://github.com/yourusername/smart-todo/wiki) • [🐛 이슈 신고](https://github.com/yourusername/smart-todo/issues) • [💬 토론](https://github.com/yourusername/smart-todo/discussions)
 
@@ -467,9 +465,9 @@ MIT License - 상업적/비상업적 자유 사용 가능
 
 <div align="center">
 
-## 🌟 **이 프로젝트가 마음에 드셨나요?**
+## **이 프로젝트가 마음에 드셨나요?**
 
-**Star를 눌러주시면 개발자에게 큰 힘이 됩니다! ⭐**
+**⭐ 눌러주시면 개발자에게 큰 힘이 됩니다!**
 
 <table>
 <tr>
@@ -504,14 +502,6 @@ MIT License - 상업적/비상업적 자유 사용 가능
 </tr>
 </table>
 
-### 🔗 **빠른 링크**
-
-[🚀 **라이브 데모**](https://your-demo-url.vercel.app/) • [📖 **문서**](https://github.com/yourusername/smart-todo/wiki) • [🐛 **버그 신고**](https://github.com/yourusername/smart-todo/issues) • [💬 **토론**](https://github.com/yourusername/smart-todo/discussions)
-
----
-
-<img src="https://via.placeholder.com/1200x100/6366f1/ffffff?text=Thank+You+For+Visiting+Smart+Todo!" alt="Thank You" width="100%">
-
-**Made with ❤️ by [Your Name](https://github.com/yourusername)**
+**Made with ❤️ by [서재민](https://github.com/library_min)**
 
 </div>
