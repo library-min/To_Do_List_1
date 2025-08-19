@@ -47,9 +47,9 @@
 <td width="50%">
 
 #### 🔧 **상호작용**
-- **드래그 앤 드롭**: @dnd-kit 기반 순서 변경
-- **인라인 편집**: 더블클릭 텍스트 수정
-- **실시간 검색**: 제목/우선순위/이모지
+- **드래그 앤 드롭**: 순서 변경
+- **인라인 편집**: 더블클릭 수정
+- **실시간 검색**: 제목 / 우선순위
 - **상단 네비**: 고정 헤더 + 테마 토글
 
 </td>
@@ -68,39 +68,6 @@
 - **완전 반응형**: 모바일(320px)부터 데스크톱(1920px+)까지 최적화
 - **키보드 네비게이션**: Enter/Escape 키 지원
 - **로컬 저장소**: 새로고침 시에도 데이터 보존
-
-## 🚀 빠른 시작
-
-### 📋 사전 요구사항
-[![Node.js](https://img.shields.io/badge/Node.js-18.0+-green.svg?style=flat-square&logo=node.js)](https://nodejs.org/)
-[![npm](https://img.shields.io/badge/npm-latest-red.svg?style=flat-square&logo=npm)](https://npmjs.com/)
-
-### 🏗️ 빌드 및 배포
-
-<table>
-<tr>
-<td width="50%">
-
-**개발 환경**
-```bash
-npm run dev     # 개발 서버
-npm run lint    # 코드 검사
-npm run preview # 빌드 미리보기
-```
-
-</td>
-<td width="50%">
-
-**프로덕션**
-```bash
-npm run build   # 프로덕션 빌드
-npm run preview # 배포 전 테스트
-# dist/ 폴더에 빌드 파일 생성
-```
-
-</td>
-</tr>
-</table>
 
 ## 🏗️ 기술 스택
 
