@@ -151,24 +151,6 @@ src/
 └── main.jsx            # ReactDOM 렌더링
 ```
 
-## 📊 성능 최적화 전략
-
-### **React 최적화**
-- `useMemo()` - 비싼 계산 결과 메모이제이션
-- `useCallback()` - 함수 재생성 방지
-- 조건부 렌더링 - 불필요한 컴포넌트 렌더링 방지
-
-### **데이터 관리**
-- Local Storage - 서버 요청 없는 즉시 로딩
-- JSON 직렬화 - 효율적인 데이터 저장/복원
-- 상태 정규화 - 중복 데이터 최소화
-
-### **CSS 성능**
-- CSS Custom Properties - 동적 테마 변경
-- Hardware Acceleration - `transform`, `opacity` 사용
-- 최소한의 리플로우 - Layout 변경 최소화
-- 효율적인 호버 효과 - GPU 가속 transform과 box-shadow 활용
-
 ## 🌟 향후 개발 로드맵
 
 ### **Phase 1: PWA & 오프라인**
