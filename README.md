@@ -1,4 +1,4 @@
-# 📋 Smart Todo - 고급 할 일 관리 애플리케이션
+# 📋 Smart Todo
 
 <div align="center">
 
