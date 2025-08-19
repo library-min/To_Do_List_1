@@ -3,8 +3,8 @@
 ## 📸 스크린샷
 
 <div align="center">
-  <img src="public/To-Do List_1Full Page (Light).png" alt="메인 화면" width="80%">
-  <img src="public/To-Do List_1Full Page.png" alt="다크 모드" width="80%">
+  <img src="public/To-Do List_1Full Page (Light).png" alt="메인 화면" width="95%">
+  <img src="public/To-Do List_1Full Page.png" alt="다크 모드" width="95%">
   <img src="public/To-Do List_1Timer.png" alt="뽀모도로 타이머" width="49%">
 </div>
 
